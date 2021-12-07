@@ -25,7 +25,7 @@ if (isSupported) {
 
   self.addEventListener('notificationclick', function (event) {
     event.notification.close();
-    const promiseChain = clients.openWindow('https://annt-ows.xyz');
+    const promiseChain = clients.openWindow('https://annt-ows.xyz/');
     event.waitUntil(promiseChain);
   });
 }
