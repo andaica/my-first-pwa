@@ -11,7 +11,9 @@ const firebaseConfig = {
   measurementId: 'G-WR8CCZPX7J',
 };
 const vapidKey =
-  "BDIU-3YNHwKsFLSweba4SxJIs8A7wGZkUNW7AIbNtIYRkzqpMv0yuX9izR20zcetvORpcZ0Nia2FZJi1isOMC0g";
+  'BDIU-3YNHwKsFLSweba4SxJIs8A7wGZkUNW7AIbNtIYRkzqpMv0yuX9izR20zcetvORpcZ0Nia2FZJi1isOMC0g';
+const serverKey =
+  'AAAAS-dKI_k:APA91bGKBR4NQSlqehLnLp2WzDkmpk4WkbbYSEavxcPltmVRsuZ-8MlVnc13B4dQlc2H8cBiE0gs_Rh2MJog7O9QVmZFtVQPUAzFW5_vGomgCk-tSbOOz_bGP8EyQUJ2gHp0fvcoByC6';
 
 const app = initializeApp(firebaseConfig);
 
@@ -23,14 +25,19 @@ export const isSupportedPush = async () => {
 
 let messaging: Messaging;
 export const askForPermissionToReceiveNotifications = async () => {
-  messaging = getMessaging(app);
-  const token = await getToken(messaging, { vapidKey: vapidKey });
-  if (token) {
-    console.log('Your token is:', token);
-  } else {
-    alert("You must allow site to get notification!")
+  try {
+    messaging = getMessaging(app);
+    const token = await getToken(messaging, { vapidKey: vapidKey });
+    if (token) {
+      console.log('Your token is:', token);
+    }
+    return token;
+  } catch (error) {
+    if (Notification.permission !== 'granted') {
+      alert('You must allow site to get notification!');
+    }
+    throw error;
   }
-  return token;
 };
 
 export const listenToNotify = (callback: (payload: any) => any) => {
@@ -38,4 +45,21 @@ export const listenToNotify = (callback: (payload: any) => any) => {
     console.log('Received foreground message: ', payload);
     callback(payload.data);
   });
+};
+
+export const subscribeTokenToTopic = async (token: string, topic: string) => {
+  const response = await fetch(
+    'https://iid.googleapis.com/iid/v1/' + token + '/rel/topics/' + topic,
+    {
+      method: 'POST',
+      headers: new Headers({
+        Authorization: 'key=' + serverKey,
+      }),
+    }
+  );
+  if (response.status < 200 || response.status >= 400) {
+    throw 'Error subscribing to topic: ' + response.status + ' - ' + response.text();
+  }
+  console.log('Subscribed to "' + topic + '"');
+  return true;
 };

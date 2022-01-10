@@ -5,6 +5,7 @@ import {
   askForPermissionToReceiveNotifications,
   isSupportedPush,
   listenToNotify,
+  subscribeTokenToTopic,
 } from './push-notification';
 
 function App() {
@@ -27,12 +28,24 @@ function App() {
       const token = await askForPermissionToReceiveNotifications();
       if (token) {
         setToken(token);
-        listenToNotify((messagePayload) => {
-          alert(messagePayload.title + ': ' + messagePayload.body);
-        });
       }
     } catch (error) {
       console.warn(error);
+    }
+  };
+
+  const registReceiveNoti = async () => {
+    if (!token) alert('You not have FCM token to receive message!');
+    else {
+      try {
+        const result = await subscribeTokenToTopic(token, 'andaica');
+        if (result) alert("You will receive notify soon!");
+        listenToNotify((messagePayload) => {
+          alert(messagePayload.title + ': ' + messagePayload.body);
+        });
+      } catch (error) {
+        console.warn(error);
+      }
     }
   };
 
@@ -48,7 +61,7 @@ function App() {
         ) : (
           <p>Your browser does not support push!</p>
         )}
-        <button onClick={getFCMToken}>Regist to get notify!</button>
+        <button onClick={registReceiveNoti}>Regist to get notify!</button>
       </header>
     </div>
   );
