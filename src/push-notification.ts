@@ -63,3 +63,21 @@ export const subscribeTokenToTopic = async (token: string, topic: string) => {
   console.log('Subscribed to "' + topic + '"');
   return true;
 };
+
+export const unSubscribeToTopic = async (token: string, topic: string) => {
+  const response = await fetch('https://iid.googleapis.com/iid/v1:batchRemove', {
+    method: 'POST',
+    headers: new Headers({
+      Authorization: 'key=' + serverKey,
+    }),
+    body: JSON.stringify({
+      to: '/topics/' + topic,
+      registration_tokens: [token],
+    }),
+  });
+  if (response.status < 200 || response.status >= 400) {
+    throw 'Error unSubscribing to topic: ' + response.status + ' - ' + response.text();
+  }
+  console.log('Unsubscribed to "' + topic + '"');
+  return true;
+};

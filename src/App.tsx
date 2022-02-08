@@ -6,11 +6,13 @@ import {
   isSupportedPush,
   listenToNotify,
   subscribeTokenToTopic,
+  unSubscribeToTopic,
 } from './push-notification';
 
 function App() {
   const [token, setToken] = useState('');
   const [isSupported, setSupported] = useState(false);
+  const [subcribed, setSubcribed] = useState(false);
 
   useEffect(() => {
     isSupportedPush()
@@ -28,24 +30,29 @@ function App() {
       const token = await askForPermissionToReceiveNotifications();
       if (token) {
         setToken(token);
+
+        const result = await subscribeTokenToTopic(token, 'andaica');
+        if (result) alert('You will receive notify soon!');
+
+        listenToNotify((messagePayload) => {
+          alert(messagePayload.title + ': ' + messagePayload.body);
+        });
+        setSubcribed(true);
+      } else {
+        alert('You not have FCM token to receive message!');
       }
     } catch (error) {
       console.warn(error);
     }
   };
 
-  const registReceiveNoti = async () => {
-    if (!token) alert('You not have FCM token to receive message!');
-    else {
-      try {
-        const result = await subscribeTokenToTopic(token, 'andaica');
-        if (result) alert("You will receive notify soon!");
-        listenToNotify((messagePayload) => {
-          alert(messagePayload.title + ': ' + messagePayload.body);
-        });
-      } catch (error) {
-        console.warn(error);
-      }
+  const stopReceiveNoti = async () => {
+    try {
+      const result = await unSubscribeToTopic(token, 'andaica');
+      setSubcribed(false);
+      if (result) alert('You stop receive notify!');
+    } catch (error) {
+      console.warn(error);
     }
   };
 
@@ -61,7 +68,9 @@ function App() {
         ) : (
           <p>Your browser does not support push!</p>
         )}
-        <button onClick={registReceiveNoti}>Regist to get notify!</button>
+        <button style={{ width: '160px' }} disabled={!subcribed} onClick={stopReceiveNoti}>
+          Stop get notify!
+        </button>
       </header>
     </div>
   );
